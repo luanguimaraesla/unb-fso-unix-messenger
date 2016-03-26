@@ -3,7 +3,7 @@ INCFOLDER := ./include/
 SRCFOLDER := ./source/
 OBJFOLDER := ./obj/
 COMPILER := gcc
-FLAGS := -Wall -ansi -I$(INCFOLDER)
+FLAGS := -I$(INCFOLDER)
 
 SRCFILES := $(wildcard source/*.c)
 
