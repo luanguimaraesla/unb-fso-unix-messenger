@@ -45,7 +45,7 @@ void create_message_queue(int permission){
 void delete_message_queue(void){
   // The msgctl() function alters the permissions and other characteristics of a message queue.
   // int msgctl(int msqid, int cmd, struct msqid_ds *buf )
-  if(msgctl(msq_id, IPC_RMID, &buf) < 0){ // remove message_queue
+  if(msgctl(msq_id, IPC_RMID, NULL) < 0){ // remove message_queue
     printf("Error deleting message queue.\n");
     exit(1);
   }else{

@@ -10,18 +10,22 @@ messenger_module * messenger_module_create(void){
 }
 
 void init_messenger_header(void){
-  int permission = 0666;
   char message[] = "Trying to connect.";
-  create_message_queue(permission);
+  fprintf(stderr, "Sending: \"%s\"\n", message);
   send_message(message);
+sleep(1); //remove
 }
 
 void init_messenger_tr(void){
+sleep(2); //remove 
   printf("Received: \"%s\"\n", receive_message());
 }
 
 void init_messenger_module(void){
   messenger_module *msg_mod = messenger_module_create();
+
+  int permission = 0666;
+  create_message_queue(permission);
 
   if((msg_mod->pid_header = fork()) < 0){
     fprintf(stderr, "Error: module could not create a new header process\n.");
@@ -41,6 +45,7 @@ void init_messenger_module(void){
     }else{
       waitpid(msg_mod->pid_header);
       waitpid(msg_mod->pid_tr);
+sleep(5); //remove
       fprintf(stderr, "Success: Program finish\n");
       delete_message_queue();
       exit(0);

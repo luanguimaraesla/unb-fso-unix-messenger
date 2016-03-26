@@ -9,7 +9,6 @@
 typedef struct fso_msq message_buf;
 
 // Global variables
-struct msqid_ds buf;      // to handle remove function
 message_buf send_buf;     // to send messages
 message_buf receive_buf;  // to receive messages
 size_t buf_length;        // stores the size of the string buffer
