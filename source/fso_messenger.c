@@ -1,13 +1,6 @@
-#include "fso_queue_messenger.h"
+#include "fso_messenger_module.h"
 
 int main(void){
-  int permission = 0666;
-  char message[] = "Hello World!";
-
-  create_message_queue(permission);
-  send_message(message); 
-  receive_message();
-  delete_message_queue();
-  
+  init_messenger_module(); 
   return 0;
 }

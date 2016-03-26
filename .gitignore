@@ -1,3 +1,5 @@
 *.sw*
 prog
 learning/msg_queue.c
+bin/*
+*.o
