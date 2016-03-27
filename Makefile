@@ -19,3 +19,7 @@ clean:
 
 run:
 	$(BINFOLDER)messenger
+
+kill: PROCESS = $(shell ps aux | grep messenger | head -n 1 | grep -o -P "\d*" | head -n 1)
+kill:
+	@kill -12 ${PROCESS}
