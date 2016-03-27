@@ -38,7 +38,7 @@ void create_message_queue(int permission){
       printf("Sorry, error creating message queue.\n");
       exit(1);
     }else{
-      printf("Success. The message queue has been created\n");
+      printf("Success. The message queue has been created | ID = %d\n", (int) key);
     }
 }
 
