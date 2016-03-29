@@ -1,6 +1,4 @@
 #include "fso_messenger_module_signals.h"
-#include "fso_messenger_module.h"
-#include "fso_queue_messenger.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,21 +15,30 @@
 
 void init_signals(void){
   // Initialize the signal to comunicate between child processes
-  signal(SIGNAL_TO_GET_MESSAGE,
+  signal(SIGNAL_MESSAGE_TO_TRANSMIT,
          tell_receiver_child_to_get_message);
+  signal(SIGNAL_MESSAGE_TO_WRITE,
+         tell_header_child_to_write_message);
   signal(SIGNAL_TO_FINISH,
          tell_receiver_child_to_finish);        
   signal(SIGNAL_TO_KILL_EVERYTHING,
          force_end);
 }
 
-void already_to_finish(int signal){
-  msg_mod->already_to_finish = 1;
+void ready_to_finish(int signal){
+  msg_mod->ready_to_finish = 1;
 } 
 
 void get_message(int signal){
-  last_received_message = receive_message(SEND_CHANNEL);
-  printf("%sReceived: \"%s\"\n", COLOR_RECEIVE, last_received_message); 
+  if(msg_mod->role == tr){ // transmit if role is trasmitter
+    current_sent_message = receive_message(SEND_CHANNEL);
+    printf("%sTo transmit: \"%s\"\n", COLOR_RECEIVE, current_sent_message);
+  }else if(msg_mod->role == header){ // print if role is header
+    current_got_message = receive_message(RECEIVE_CHANNEL);
+    printf("%sReceived: \"%s\"\n", COLOR_RECEIVE, current_got_message); 
+  }else{
+    fprintf(stderr, "%sError: wrong role to get message.\n%s", KRED, KNRM);
+  }
 }
 
 void tell_receiver_child_to_finish(int signal){
@@ -42,8 +49,14 @@ void tell_receiver_child_to_finish(int signal){
 
 void tell_receiver_child_to_get_message(int signal){
   // Send signal to tell child receiver that the 
-  // message in the queue is already to be read
-  kill(msg_mod->pid_tr, SIGNAL_TO_GET_MESSAGE);
+  // message in the queue is ready to be read
+  kill(msg_mod->pid_tr, SIGNAL_MESSAGE_TO_TRANSMIT);
+}
+
+void tell_header_child_to_write_message(int signal){
+  //Send signal to tell the header that the
+  // message in the queue is ready to be written
+  kill(msg_mod->pid_header, SIGNAL_MESSAGE_TO_WRITE);
 }
 
 void force_end(int signal){

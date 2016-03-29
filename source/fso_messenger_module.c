@@ -1,6 +1,5 @@
 #include "fso_messenger_module.h"
 #include "fso_queue_messenger.h"
-#include "fso_messenger_module_signals.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,45 +19,55 @@
 messenger_module * messenger_module_create(void){
   messenger_module *new = (messenger_module *) malloc (sizeof(messenger_module));
   new->pid_father = getpid();
-  new->already_to_finish = 0;
+  new->ready_to_finish = 0;
   return new;
 }
 
 //=====================================HEADER=======================================
 void init_messenger_header(void){
+  msg_mod->role = header;
+  
+  signal(SIGNAL_MESSAGE_TO_WRITE, get_message);
+  signal(SIGNAL_TO_FINISH, ready_to_finish);
+  
   char message[MSG_SIZE] = "Trying to connect.";
   fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
   send_message(message, SEND_CHANNEL);
   sleep(1);
-  kill(msg_mod->pid_father, SIGNAL_TO_GET_MESSAGE);
+  kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_TRANSMIT);
   
 
   // Infinite loop that asks user for some text to send
   while(1){
+    sleep(10);
     printf("%sType: %s", COLOR_SEND, KNRM);
-    sleep(1);
     fgets(message, MSG_SIZE, stdin);
     strtok(message, "\n"); // Remove the final "\n"
-
-    // Finish the program if user types 0
     if(message[0] == '0' && message[1] == '\0') break;
 
     fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
     send_message(message, SEND_CHANNEL);
-    kill(msg_mod->pid_father, SIGNAL_TO_GET_MESSAGE);
+    kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_TRANSMIT);
   }
   kill(msg_mod->pid_father, SIGNAL_TO_FINISH);
 }
 
 //================================RECEIVER/TRASMITER================================
-void run_messenger_tr(void){
-  signal(SIGNAL_TO_GET_MESSAGE, get_message);
-  signal(SIGNAL_TO_FINISH, already_to_finish);
-  while(!(msg_mod->already_to_finish)){
-    sleep(1);
+void init_messenger_tr(void){
+  msg_mod->role = tr;
+
+  signal(SIGNAL_MESSAGE_TO_TRANSMIT, get_message);
+  signal(SIGNAL_TO_FINISH, ready_to_finish);
+
+  // Infinite loop that verify if there is a new message
+  while(!(msg_mod->ready_to_finish)){
+    char message[MSG_SIZE] = "Trying to write";
+    fprintf(stderr, "%sSending to write: \"%s\"\n", COLOR_SEND, message);
+    send_message(message, RECEIVE_CHANNEL);
+    kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_WRITE);
+    sleep(10);
   }
 }
-
 
 //===================================CONTROLLER====================================
 void init_messenger_module(void){
@@ -66,6 +75,7 @@ void init_messenger_module(void){
 
   // Creating the messenger controller struct
   msg_mod = messenger_module_create();
+  msg_mod->role = controller;
    
   // Creating the message queue
   int permission = 0666;
@@ -88,7 +98,7 @@ void init_messenger_module(void){
       exit(1);
     }else if(msg_mod->pid_tr == 0){ // TR process
       fprintf(stderr, "%sSuccess: TR process created.\n", KGRN);
-      run_messenger_tr();
+      init_messenger_tr();
       exit(0);
     }else{
       waitpid(msg_mod->pid_header, &header_status, 0);
