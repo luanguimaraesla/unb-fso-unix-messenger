@@ -3,23 +3,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void send_message(char msg_txt[]){
+void send_message(char msg_txt[], long channel){
   // int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);
-  send_buf.mtype = 1; // Message type = 1
+  send_buf.mtype = channel; // SEND_CHANNEL = 1 , RECEIVE_CHANNEL = 2
   strcpy(send_buf.mtext, msg_txt); // Copying message
   buf_length = strlen(send_buf.mtext) + 1 ; // Setting size of message buffer
 
   if(msgsnd(msq_id, &send_buf, buf_length, IPC_NOWAIT) < 0){
     printf("Error sending message.\n");
   }else{
-    printf("Message: \"%s\" sent\n", send_buf.mtext);
+    printf("Message: \"%s\" sent over channel %ld.\n", send_buf.mtext, channel);
   }
 }
 
-char *receive_message(void){
+char *receive_message(long channel){
   // int msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp,int msgflg);
   
-  if(msgrcv(msq_id, &receive_buf, MSG_SIZE, 1, 0) < 0){
+  if(msgrcv(msq_id, &receive_buf, MSG_SIZE, channel, 0) < 0){
     printf("Error getting message.\n");
   }else{
     printf("Got message: \"%s\"\n", receive_buf.mtext);

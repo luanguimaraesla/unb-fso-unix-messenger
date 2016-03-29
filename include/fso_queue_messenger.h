@@ -6,6 +6,9 @@
 #include <sys/types.h>
 #include "fso_queue_messenger_structures.h" /* including struct fso_msq */
 
+#define SEND_CHANNEL 1
+#define RECEIVE_CHANNEL 2
+
 typedef struct fso_msq message_buf;
 
 // Global variables
@@ -18,7 +21,7 @@ int msq_id;               // queue id
 // Function's headers
 void create_message_queue(int permission);
 void delete_message_queue(void);
-void send_message(char msg_txt[]);
-char *receive_message(void);
+void send_message(char msg_txt[], long channel);
+char *receive_message(long channel);
 
 #endif

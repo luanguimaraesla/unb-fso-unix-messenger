@@ -11,20 +11,13 @@
 #define COLOR_RECEIVE  "\x1B[33m" // YLW
 #define COLOR_SEND  "\x1B[36m"    // CYN
 
-messenger_module * messenger_module_create(void){
-  messenger_module *new = (messenger_module *) malloc (sizeof(messenger_module));
-  new->pid_father = getpid();
-  new->already_to_finish = 0;
-  return new;
-}
-
 // Signal functions
 void already_to_finish(int signal){
   msg_mod->already_to_finish = 1;
 } 
 
 void get_message(int signal){
-  last_received_message = receive_message();
+  last_received_message = receive_message(SEND_CHANNEL);
   printf("%sReceived: \"%s\"\n", COLOR_RECEIVE, last_received_message); 
 }
 
@@ -48,22 +41,33 @@ void force_end(int signal){
   exit(0); 
 }
 
+messenger_module * messenger_module_create(void){
+  messenger_module *new = (messenger_module *) malloc (sizeof(messenger_module));
+  new->pid_father = getpid();
+  new->already_to_finish = 0;
+  return new;
+}
+
 void init_messenger_header(void){
   char message[MSG_SIZE] = "Trying to connect.";
   fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
-  send_message(message);
+  send_message(message, SEND_CHANNEL);
   sleep(1);
   kill(msg_mod->pid_father, SIGNAL_TO_GET_MESSAGE);
   
+
+  // Infinite loop that asks user for some text to send
   while(1){
     printf("%sType: %s", COLOR_SEND, KNRM);
-    sleep(3);
-    scanf("%s", message);
+    sleep(1);
+    fgets(message, MSG_SIZE, stdin);
+    strtok(message, "\n"); // Remove the final "\n"
+
     // Finish the program if user types 0
     if(message[0] == '0' && message[1] == '\0') break;
 
     fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
-    send_message(message);
+    send_message(message, SEND_CHANNEL);
     kill(msg_mod->pid_father, SIGNAL_TO_GET_MESSAGE);
   }
   kill(msg_mod->pid_father, SIGNAL_TO_FINISH);
