@@ -3,18 +3,18 @@
 
 #include "fso_shared_memory_controller_structures.h"
 
-#define KEY 122
+#define KEY 1235
 #define NUMBER_OF_CHANNELS 2
 #define AVAILABLE_TO_READ '*'
 #define AVAILABLE_TO_WRITE '-'
 
 shm_control *shared_memory;
 
-void create_shm_control(void);
+void create_shm_control(int permission);
 char *try_to_transmit_message(char *msg);
 char *try_to_receive_message(void);
-void create_shared_memory(void);
-void delete_segment(void);
+void create_shared_memory(int permission);
+void delete_shared_memory(void);
 void write_segment(char *string);
 char *read_segment(void);
 int is_available_to_read(void);

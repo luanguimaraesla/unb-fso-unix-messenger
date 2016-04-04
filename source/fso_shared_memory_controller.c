@@ -6,11 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void create_shm_control(void){
+void create_shm_control(int permission){
   shared_memory = (shm_control *) malloc (sizeof (shm_control));
   shared_memory->key = (key_t) KEY;
   shared_memory->size = (MSG_SIZE * NUMBER_OF_CHANNELS);
-  shared_memory->creation_flags = IPC_CREAT | IPC_EXCL | 0666; 
+  shared_memory->creation_flags = IPC_CREAT | IPC_EXCL | permission; 
 }
 
 void create_segment(void){
@@ -79,17 +79,18 @@ void write_segment(char *string){
   turn_read_on();
 }
 
-void delete_segment(void){
-  if(shmctl(shared_memory->id,IPC_RMID,0) < 0){
+void delete_shared_memory(void){
+  if(shmctl(shared_memory->id, IPC_RMID, 0) < 0){
     fprintf(stderr, "Error, the segment couldn't be removed.\n");
     exit(1);
   }else{
-    fprintf(stderr, "Sucess: the segment was deleted.\n");
+    fprintf(stderr, "Success: the segment was deleted.\n");
   }
 }
 
-void create_shared_memory(void){
-  create_shm_control();
+void create_shared_memory(int permission){
+  create_shm_control(permission);
+  create_segment();
   attach_segment();
 }
 
