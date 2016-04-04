@@ -30,6 +30,7 @@ void attach_segment(void){
     fprintf(stderr, "Error: cannot attach the segment");
     exit(1);
   }else{
+    turn_write_on();
     fprintf(stderr, "Success: shared memory segment attached\n");
   }
 }

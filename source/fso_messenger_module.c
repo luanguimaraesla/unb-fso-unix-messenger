@@ -60,13 +60,18 @@ void init_messenger_tr(void){
   signal(SIGNAL_MESSAGE_TO_TRANSMIT, get_message);
   signal(SIGNAL_TO_FINISH, ready_to_finish);
 
+  int i = 0;
+  char test_message_to_transmit[MSG_SIZE];
   // Infinite loop that verify if there is a new message
   while(!(msg_mod->ready_to_finish)){
-    char message[MSG_SIZE] = "Trying to write";
+    sprintf(test_message_to_transmit, "%d", i++);
+    try_to_transmit_message(test_message_to_transmit);
+    sleep(3);
+    char *message = try_to_receive_message();
     fprintf(stderr, "%sSending to write: \"%s\"\n", COLOR_SEND, message);
     send_message(message, RECEIVE_CHANNEL);
     kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_WRITE);
-    sleep(10);
+    sleep(3);
   }
 }
 
