@@ -10,7 +10,7 @@ void create_shm_control(int permission){
   shared_memory = (shm_control *) malloc (sizeof (shm_control));
   shared_memory->key = (key_t) KEY;
   shared_memory->size = (MSG_SIZE * NUMBER_OF_CHANNELS);
-  shared_memory->creation_flags = IPC_CREAT | IPC_EXCL | permission; 
+  shared_memory->creation_flags = IPC_CREAT | permission; 
 }
 
 void create_segment(void){
