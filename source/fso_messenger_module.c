@@ -31,12 +31,12 @@ void init_messenger_header(void){
   signal(SIGNAL_MESSAGE_TO_WRITE, get_message);
   signal(SIGNAL_TO_FINISH, ready_to_finish);
   
-  char message[MSG_SIZE] = "Trying to connect.";
+  char message[MSG_SIZE]; /* = "Trying to connect.";
   fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
   send_message(message, SEND_CHANNEL);
   sleep(1);
   kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_TRANSMIT);
-  
+  */
 
   // Infinite loop that asks user for some text to send
   while(1){
@@ -54,19 +54,15 @@ void init_messenger_header(void){
 }
 
 //================================RECEIVER/TRASMITER================================
+
 void init_messenger_tr(void){
   msg_mod->role = tr;
 
   signal(SIGNAL_MESSAGE_TO_TRANSMIT, get_message);
   signal(SIGNAL_TO_FINISH, ready_to_finish);
 
-  int i = 0;
-  char test_message_to_transmit[MSG_SIZE];
   // Infinite loop that verify if there is a new message
   while(!(msg_mod->ready_to_finish)){
-    sprintf(test_message_to_transmit, "%d", i++);
-    try_to_transmit_message(test_message_to_transmit);
-    sleep(3);
     char *message = try_to_receive_message();
     fprintf(stderr, "%sSending to write: \"%s\"\n", COLOR_SEND, message);
     send_message(message, RECEIVE_CHANNEL);
@@ -76,6 +72,7 @@ void init_messenger_tr(void){
 }
 
 //===================================CONTROLLER====================================
+
 void init_messenger_module(void){
   init_signals();
 

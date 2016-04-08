@@ -21,6 +21,7 @@ void write_segment(char *string);
 char *read_segment(void);
 int is_available_to_read(void);
 int is_available_to_write(void);
+int is_waiting(void);
 char * get_shmaddr_to_receive(void);
 char * get_shmaddr_to_transmit(void);
 void turn_read_on(void);

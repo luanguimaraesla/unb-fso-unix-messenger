@@ -1,4 +1,5 @@
 #include "fso_messenger_module_signals.h"
+#include "fso_shared_memory_controller.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,7 +33,8 @@ void ready_to_finish(int signal){
 void get_message(int signal){
   if(msg_mod->role == tr){ // transmit if role is trasmitter
     current_sent_message = receive_message(SEND_CHANNEL);
-    printf("%sTo transmit: \"%s\"\n", COLOR_RECEIVE, current_sent_message);
+    printf("%sTransmitting: \"%s\"\n", COLOR_RECEIVE, current_sent_message);
+    try_to_transmit_message(current_sent_message);
   }else if(msg_mod->role == header){ // print if role is header
     current_got_message = receive_message(RECEIVE_CHANNEL);
     printf("%sReceived: \"%s\"\n", COLOR_RECEIVE, current_got_message); 

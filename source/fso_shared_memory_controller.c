@@ -68,6 +68,11 @@ int is_available_to_read(void){
   return *(get_shmaddr_to_receive()) == AVAILABLE_TO_READ; 
 }
 
+int is_waiting(void){
+  return (*(shared_memory->addr) == WAITING_ANOTHER ||
+          *(shared_memory->addr + MSG_SIZE) == WAITING_ANOTHER);
+}
+
 char * get_shmaddr_to_transmit(void){
   // write in the space of another process
   return shared_memory->addr + (1 - shared_memory->module_id) * MSG_SIZE;
@@ -123,11 +128,11 @@ void create_shared_memory(int permission){
 }
 
 char *try_to_receive_message(void){
-  while(!is_available_to_read()) sleep(1);
+  while(is_waiting() || !is_available_to_read()) sleep(1);
   return read_segment();
 } 
 
 char *try_to_transmit_message(char *msg){
-  while(!is_available_to_write()) sleep(1);
+  while(is_waiting() || !is_available_to_write()) sleep(1);
   write_segment(msg);
 } 
