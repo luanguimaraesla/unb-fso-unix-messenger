@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 void send_message(char msg_txt[], long channel){
   // int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);
@@ -32,6 +33,8 @@ void create_message_queue(int permission){
     // IPC_CREAT create a queue if it no exists
     // When called with both the IPC_CREAT and IPC_EXCL flags, the function fails if the facility already exists.
     // that is, if multiple processes are trying to create a queue with the same facility, only one wins.
+    srand(time(NULL));
+    key = rand() % 9000 + 1000; // Random number with 4 digits
 
     if((msq_id = msgget(ftok("/tmp", key), IPC_CREAT | IPC_EXCL | permission)) < 0){
       printf("Sorry, error creating message queue.\n");
