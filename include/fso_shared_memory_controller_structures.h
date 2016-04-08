@@ -12,6 +12,7 @@ typedef struct shm_controller{
   size_t size;
   char *addr;
   int creation_flags;
+  int module_id;
 }shm_control;
 
 #endif
