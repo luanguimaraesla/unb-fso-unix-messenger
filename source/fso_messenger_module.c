@@ -40,7 +40,6 @@ void init_messenger_header(void){
 
   // Infinite loop that asks user for some text to send
   while(1){
-    sleep(10);
     printf("%sType: %s", COLOR_SEND, KNRM);
     fgets(message, MSG_SIZE, stdin);
     strtok(message, "\n"); // Remove the final "\n"

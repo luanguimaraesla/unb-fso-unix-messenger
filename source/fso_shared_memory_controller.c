@@ -128,11 +128,11 @@ void create_shared_memory(int permission){
 }
 
 char *try_to_receive_message(void){
-  while(is_waiting() || !is_available_to_read()) sleep(1);
+  while((is_waiting() || !is_available_to_read()) && !(msg_mod->ready_to_finish)) sleep(1);
   return read_segment();
 } 
 
 char *try_to_transmit_message(char *msg){
-  while(is_waiting() || !is_available_to_write()) sleep(1);
+  while((is_waiting() || !is_available_to_write()) && !(msg_mod->ready_to_finish)) sleep(1);
   write_segment(msg);
 } 
