@@ -1,3 +1,4 @@
+LOGFOLDER := ./log/
 BINFOLDER := ./bin/
 INCFOLDER := ./include/
 SRCFOLDER := ./source/
@@ -18,7 +19,7 @@ clean:
 	rm -rf $(OBJFOLDER)*.o
 
 run:
-	$(BINFOLDER)messenger
+	$(BINFOLDER)messenger 2> $(LOGFOLDER)messenger.log
 
 kill: PROCESS = $(shell ps aux | grep messenger | head -n 1 | grep -o -P "\d*" | head -n 1)
 kill:

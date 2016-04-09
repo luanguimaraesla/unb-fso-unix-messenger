@@ -11,18 +11,18 @@ void send_message(char msg_txt[], long channel){
   buf_length = strlen(send_buf.mtext) + 1 ; // Setting size of message buffer
 
   if(msgsnd(msq_id, &send_buf, buf_length, IPC_NOWAIT) < 0){
-    printf("Error sending message.\n");
+    fprintf(stderr, "Error sending message.\n");
   }else{
-    printf("Message: \"%s\" sent over channel %ld.\n", send_buf.mtext, channel);
+    fprintf(stderr, "Message: \"%s\" sent over channel %ld.\n", send_buf.mtext, channel);
   }
 }
 
 char *receive_message(long channel){
   // int msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp,int msgflg);
   if(msgrcv(msq_id, &receive_buf, MSG_SIZE, channel, 0) < 0){
-    printf("Error getting message.\n");
+    fprintf(stderr, "Error getting message.\n");
   }else{
-    printf("Got message: \"%s\"\n", receive_buf.mtext);
+    fprintf(stderr, "Got message: \"%s\"\n", receive_buf.mtext);
     return receive_buf.mtext;
   }
   return NULL;
@@ -37,10 +37,10 @@ void create_message_queue(int permission){
     key = rand() % 9000 + 1000; // Random number with 4 digits
 
     if((msq_id = msgget(ftok("/tmp", key), IPC_CREAT | IPC_EXCL | permission)) < 0){
-      printf("Sorry, error creating message queue.\n");
+      fprintf(stderr, "Sorry, error creating message queue.\n");
       exit(1);
     }else{
-      printf("Success. The message queue has been created | ID = %d\n", (int) key);
+      fprintf(stderr, "Success: The message queue has been created | ID = %d\n", (int) key);
     }
 }
 
@@ -48,9 +48,9 @@ void delete_message_queue(void){
   // The msgctl() function alters the permissions and other characteristics of a message queue.
   // int msgctl(int msqid, int cmd, struct msqid_ds *buf )
   if(msgctl(msq_id, IPC_RMID, NULL) < 0){ // remove message_queue
-    printf("Error deleting message queue.\n");
+    fprintf(stderr, "Error deleting message queue.\n");
     exit(1);
   }else{
-    printf("Success deleting message queue.\n");
+    fprintf(stderr, "Success deleting message queue.\n");
   } 
 }
