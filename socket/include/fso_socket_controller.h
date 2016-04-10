@@ -1,15 +1,18 @@
-#ifndef FSO_SHARED_MEMORY_CONTROLLER
-#define FSO_SHARED_MEMORY_CONTROLLER
+#ifndef FSO_SOCKET_CONTROLLER
+#define FSO_SOCKET_CONTROLLER
 
-#include "fso_shared_memory_controller_structures.h"
+#include "fso_socket_controller_structures.h"
 
-#define KEY 1235
-#define NUMBER_OF_CHANNELS 2
-#define AVAILABLE_TO_READ '*'
-#define AVAILABLE_TO_WRITE '-'
-#define WAITING_ANOTHER '~'
+// Socket headers
+#include <sys/types.h>
+#include <sys/sockets.h>
+#include <netdb.h>
 
-shm_control *shared_memory;
+#define CLIENTS_QUEUE_LENGTH 5
+
+// Global function
+socket_control *sock;
+
 
 void create_shm_control(int permission);
 char *try_to_transmit_message(char *msg);
