@@ -14,6 +14,7 @@
 #define KGRN  "\x1B[32m"          // GREEN
 #define COLOR_RECEIVE  "\x1B[33m" // YLW
 #define COLOR_SEND  "\x1B[36m"    // CYN
+#define CLEAR_SCREEN "\033[H\033[J"
 
 #endif
 
@@ -31,21 +32,21 @@ void init_messenger_header(void){
   signal(SIGNAL_MESSAGE_TO_WRITE, get_message);
   signal(SIGNAL_TO_FINISH, ready_to_finish);
   
-  char message[MSG_SIZE]; /* = "Trying to connect.";
-  fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
-  send_message(message, SEND_CHANNEL);
-  sleep(1);
-  kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_TRANSMIT);
-  */
+  char message[MSG_SIZE];
+  printf("%s%sHI! WELCOME TO THE FSO MESSENGER!\n%sTYPE 0 TO EXIT\n", CLEAR_SCREEN, KGRN, KRED); 
+  sleep(2);
+
+  // TITLE  
+  printf("%s%s\t    FULL DUPLEX MESSENGER\n%s\tmessage queues and shared memory%s\n\n",
+         CLEAR_SCREEN, KGRN, KRED, KNRM);
 
   // Infinite loop that asks user for some text to send
   while(1){
-    printf("%sType: %s", COLOR_SEND, KNRM);
     fgets(message, MSG_SIZE, stdin);
     strtok(message, "\n"); // Remove the final "\n"
     if(message[0] == '0' && message[1] == '\0') break;
 
-    fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message);
+    fprintf(stderr, "%sSending: \"%s\"\n", COLOR_SEND, message, KNRM);
     send_message(message, SEND_CHANNEL);
     kill(msg_mod->pid_father, SIGNAL_MESSAGE_TO_TRANSMIT);
   }
