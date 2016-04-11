@@ -2,7 +2,7 @@
 #define FSO_MESSENGER_MODULE_SIGNALS
 
 #include "fso_messenger_module.h"
-#include "fso_shared_memory_controller.h"
+#include "fso_socket_controller.h"
 #include "fso_queue_messenger.h"
 #include <signal.h>
 

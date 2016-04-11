@@ -1,6 +1,6 @@
 #include "fso_messenger_module.h"
 #include "fso_queue_messenger.h"
-#include "fso_shared_memory_controller.h"
+#include "fso_socket_controller.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +75,8 @@ void init_messenger_tr(void){
 
 void init_messenger_module(void){
   init_signals();
+  char ip[] = "127.0.0.1";
+  int port = 5000;
 
   // Creating the messenger controller struct
   msg_mod = messenger_module_create();
@@ -83,7 +85,7 @@ void init_messenger_module(void){
   // Creating the message queue
   int permission = 0666;
   create_message_queue(permission);
-  create_shared_memory(permission);  
+  init_socket(ip, port);  
 
   // Child status
   int header_status = 0;
@@ -109,7 +111,7 @@ void init_messenger_module(void){
       waitpid(msg_mod->pid_tr, &tr_status, 0);
       fprintf(stderr, "%sSuccess: Program finish\n%s", KGRN, KNRM);
       delete_message_queue();
-      delete_shared_memory();
+      close_socket();
       exit(0);
     }
   }

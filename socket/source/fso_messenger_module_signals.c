@@ -1,5 +1,5 @@
 #include "fso_messenger_module_signals.h"
-#include "fso_shared_memory_controller.h"
+#include "fso_socket_controller.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -67,6 +67,6 @@ void force_end(int signal){
   kill(msg_mod->pid_tr, 9);
   kill(msg_mod->pid_header, 9);
   delete_message_queue();
-  delete_shared_memory();
+  close_socket();
   exit(0); 
 }

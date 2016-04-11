@@ -5,10 +5,9 @@
 #include <sys/shm.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void create_socket_control(void){
-  sock = (socket_control *) malloc (sizeof (socket_control));
-  
   // 0 - IP - INTERNET PROTOCOL
   // 1 - ICMP - INTERNET CONTROL MESSAGE PROTOCOL
   // 2 - IGMP - INTERNET GROUP MULTICAST PROTOCOL
@@ -16,20 +15,21 @@ void create_socket_control(void){
   // 6 - TCP - TRANSMISSION CONTROL PROTOCOL
   // 17 - UDP - USER DATAGRAMA PROTOCOL
 
-  sock->protocol = 0;
-  sock->type = SOCK_STREAM;
+  sock.protocol = 0;
+  sock.type = SOCK_STREAM;
 
   // AF_INET      (ARPA INTERNET PROTOCOLS)
   // AF_UNIX      (UNIX INTERNET PROTOCOLS)
   // AF_ISO       (ISO PROTOCOLS)
   // AF_NS        (XEROX NETWORK SYSTEM PROTOCOLS)
 
-  sock->sin_family = AF_INET;
-  sock->cli_queue_length = CLIENTS_QUEUE_LENGTH;
+  sock.sin_family = AF_INET;
+  sock.cli_queue_length = CLIENTS_QUEUE_LENGTH;
+  sock.rec_message[0] = WAITING;
 }
 
 void create_socket(void){
-  if((sock->id = socket(sock->sin_family, sock->type, sock->protocol)) < 0){
+  if((sock.id = socket(sock.sin_family, sock.type, sock.protocol)) < 0){
       fprintf(stderr, "Error while creating socket\n");
       kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
   }else{
@@ -39,12 +39,12 @@ void create_socket(void){
 
 void bind_socket(char ip_address[], int port){
   // Clean the serv_addr variable
-  memset((char *)&sock->serv_addr,0,sizeof(sock->serv_addr));
-  sock->serv_addr.sin_family       = sock->sin_family;
-  sock->serv_addr.sin_addr.s_addr  = inet_addr(ip_address);
-  sock->serv_addr.sin_port         = htons(port);
+  memset((char *)&(sock.serv_addr),0,sizeof(sock.serv_addr));
+  sock.serv_addr.sin_family       = sock.sin_family;
+  sock.serv_addr.sin_addr.s_addr  = inet_addr(ip_address);
+  sock.serv_addr.sin_port         = htons(port);
 
-  if (bind(sock->id, (struct sockaddr *)&(sock->serv_addr), sizeof(sock->serv_addr)) < 0) {
+  if (bind(sock.id, (struct sockaddr *)&(sock.serv_addr), sizeof(sock.serv_addr)) < 0) {
     fprintf(stderr, "Error binding socket.\n");
     kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
   }else{
@@ -53,70 +53,135 @@ void bind_socket(char ip_address[], int port){
 }
 
 void listen_port(void){
-  if(listen(sock->id, sock->cli_queue_length) < 0){
+  if(listen(sock.id, 5) < 0){
     fprintf(stderr, "Error listening port.\n");
     kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
   }else{
-    fprintf(stderr, "Success: binding socket.\n");
+    fprintf(stderr, "Success: listening port.\n");
   }
 }
 
-void listen_new_clients(void){
-  int addr_length = sizeof(sock->cli_addr);
-  int new_connection;
+void listen_new_client(void){
+  int addr_length = sizeof(sock.cli_addr);
   int pid;
+  int cli_counter = 0;
+  int new_connection;
 
-  if((new_connection = accept(sock->id, (struct sockaddr *) &(sock->cli_addr), &addr_length)) < 0){
+  turn_write_on();
+  if((sock.cli_id = accept(sock.id, (struct sockaddr *) &(sock.cli_addr), &addr_length)) < 0){
     fprintf(stderr, "Error listening client.\n");
     kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
   }else{
     fprintf(stderr, "Success: listening client.\n");
+    new_connection = sock.cli_id;
   }
 
-  while(1){
-    if((pid = fork()) < 0){
-      fprintf(stderr, "Error forking in fuction listen_client.\n");
-      kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
-    }else{
-      fprintf(stderr, "Success: listening process forked.\n");
-      // Child
-      if(!pid){
-        fprintf(stderr, "Success: client connected.\n");
-        listen_client(new_connection, sock->cli_addr);
-        fprintf(stderr, "Success: client disconnected.\n");
-        exit(0);
-      }else{
-        fprintf(stderr, "Waiting connections.\n");
-      }
-    }
+  if((pthread_create(&client_thread,
+                     NULL, listen_client,
+                     (void *) new_connection)) < 0){
+    fprintf(stderr, "Error creating thread in fuction listen_client.\n");
+    kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
+  }else{
+    fprintf(stderr, "Success: listening thread created.\n");
   }
+  //pthread_join(client_thread);
 }
 
-void listen_client(int connection, struct sockaddr_in cli_addr){
+void * listen_client(void * connection){
   char bufin[MSG_SIZE];
+
+  fprintf(stderr, "Success: client connected.\n");
   while(1){
     memset(&bufin, 0x0, sizeof(bufin));
-    recv(connection, &bufin, sizeof(bufin), 0);
-    if (strncmp(bufin, "FIM", 3) == 0)
-      break;
+    fprintf(stderr, "Success: thread waiting to write on sock.rec_message.\n");
+    while(!is_available_to_write());
+    fprintf(stderr, "Success: thread enabled to write on sock.rec_message.\n");
+    if(recvfrom((int) connection, &bufin, sizeof(bufin), 0, NULL, NULL) < 0){
+      fprintf(stderr, "Error: thread could not receive any data.\n");
+      kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
+    }else{
+      strtok(bufin, "\n"); // Remove the final "\n"
+      fprintf(stderr, "Success: thread received \"%s\".\n", bufin);
+    }
+    if(bufin[0] == '0' && bufin[1] == '\0') break;
+    write_received_message(&bufin[0]);
   }
+
   close(connection);
+  fprintf(stderr, "Success: client disconnected.\n");
+  pthread_exit(0);
+}
+
+void close_socket(void){
+  close(sock.id);
+  close(sock.cli_id);
 }
 
 void init_socket(char ip_address[], int port){
   create_socket_control();
-  create_socket(ip_address, port);
-  bind_socket();
+  create_socket();
+  bind_socket(ip_address, port);
   listen_port();
-  listen_new_clients();
+  listen_new_client();
+}
+
+char *read_message(void){
+  if(!is_available_to_read()){
+    fprintf(stderr, "Error: message is not available to read.\n");
+    exit(1);
+  }else{
+    fprintf(stderr, "Success: copying and returning sock.rec_message.\n");
+  }
+  char *string = (char *) malloc (sizeof(char) * MSG_SIZE);
+  char *runner = sock.rec_message + 1;
+  while(*runner != '\0')
+    *(string++) = *(runner++);
+  *string = '\0';
+
+  fprintf(stderr, "Success: \"%s\" copied.\n", string);
+  turn_write_on();
+  return string;
+}
+
+void write_received_message(char *msg){
+  fprintf(stderr, "Coping connection buffer to sock.rec_message.\n");
+  strcpy(sock.rec_message, msg);
+  turn_read_on();
 }
 
 char *try_to_receive_message(void){
-  while(!(msg_mod->ready_to_finish)) sleep(1);
-  return read_segment();
+  fprintf(stderr, "Waiting sock.rec_message be readable.\n");
+  while(!is_available_to_read() && !(msg_mod->ready_to_finish)) sleep(1);
+  return read_message();
 } 
 
 char *try_to_transmit_message(char *msg){
-  while((is_waiting() || !is_available_to_write()) && !(msg_mod->ready_to_finish)) sleep(1);
-  write_segment(msg);
-} 
+  int len = sizeof(sock.cli_addr);
+  if(sendto(sock.cli_id, msg, MSG_SIZE, 0, (struct sockaddr *) &(sock.cli_addr), len) < 0){
+    fprintf(stderr, "Error transmitting message\n");
+  }else{
+    fprintf(stderr, "Success transmitting message: \"%s\"\n", msg);
+  }
+}
+ 
+void turn_write_on(void){
+  fprintf(stderr, "The sock.rec_message string is writable.\n");
+  sock.rec_message[0]  = AVAILABLE_TO_WRITE;
+}
+
+void turn_read_on(void){
+  fprintf(stderr, "The sock.rec_message string is readable.\n");
+  sock.rec_message[0]  = AVAILABLE_TO_READ;
+}
+
+int is_available_to_write(void){
+  return sock.rec_message[0] == AVAILABLE_TO_WRITE;
+}
+
+int is_available_to_read(void){
+  return sock.rec_message[0] == AVAILABLE_TO_READ; 
+}
+
+int is_waiting(void){
+  return sock.rec_message[0] == WAITING;
+}
