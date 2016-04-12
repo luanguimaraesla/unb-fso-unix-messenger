@@ -85,7 +85,7 @@ void * init_conversation(void * connection){
       fprintf(stderr, "Success: thread received \"%s\".\n", bufin);
     }
     strtok(bufin, "\n");
-    if(bufin[0] == '0' && bufin[1] == '\0') break;
+    if(bufin[0] == '\0') break;
     write_received_message(bufin);
   }
 
@@ -100,6 +100,7 @@ void close_socket(void){
 }
 
 void init_socket(char ip_address[], int port){
+  sleep(1);
   create_socket_control();
   create_socket();
   connect_to_socket(ip_address, port);
@@ -129,9 +130,9 @@ char *read_message(void){
 void write_received_message(char *msg){
   fprintf(stderr, "Coping connection buffer to sock.rec_message.\n");
   strcpy(sock.rec_message + 1, msg);
-  fprintf(stderr, "Copied as: \"%s\"", sock.rec_message);
+  fprintf(stderr, "Copied as: \"%s\"\n", sock.rec_message);
   turn_read_on();
-  fprintf(stderr, "Readable as: \"%s\"", sock.rec_message);
+  fprintf(stderr, "Readable as: \"%s\"\n", sock.rec_message);
 }
 
 char *try_to_receive_message(void){

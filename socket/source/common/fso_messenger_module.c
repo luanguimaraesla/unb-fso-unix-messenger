@@ -33,11 +33,11 @@ void init_messenger_header(void){
   signal(SIGNAL_TO_FINISH, ready_to_finish);
   
   char message[MSG_SIZE];
-  printf("%s%sHI! WELCOME TO THE FSO MESSENGER!\n%sTYPE 0 TO EXIT\n", CLEAR_SCREEN, KGRN, KRED); 
+  printf("%s%s\tHI! WELCOME TO THE FSO MESSENGER!\n", CLEAR_SCREEN, KGRN); 
   sleep(2);
 
   // TITLE  
-  printf("%s%s\t    FULL DUPLEX MESSENGER\n%s\tmessage queues and shared memory%s\n\n",
+  printf("%s%s\t   FULL DUPLEX MESSENGER\n%s\tmessage queues and socket\n\t     type '0' to exit%s\n\n",
          CLEAR_SCREEN, KGRN, KRED, KNRM);
 
   // Infinite loop that asks user for some text to send

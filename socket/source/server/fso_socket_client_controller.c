@@ -92,20 +92,20 @@ void * listen_client(void * connection){
 
   fprintf(stderr, "Success: client connected.\n");
   while(1){
-    memset(&bufin, 0x0, sizeof(bufin));
+    memset(bufin, 0x0, sizeof(bufin));
     fprintf(stderr, "Success: thread waiting to write on sock.rec_message.\n");
     while(!is_available_to_write()){
       sleep(1);
     };
     fprintf(stderr, "Success: thread enabled to write on sock.rec_message.\n");
-    if(recvfrom((int) connection, &bufin, sizeof(bufin), 0, NULL, NULL) < 0){
+    if(recvfrom((int) connection, bufin, sizeof(bufin), 0, NULL, NULL) < 0){
       fprintf(stderr, "Error: thread could not receive any data.\n");
       kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
     }else{
       fprintf(stderr, "Success: thread received \"%s\".\n", bufin);
     }
     strtok(bufin, "\n");
-    if(bufin[0] == '0' && bufin[2] == '\0') break;
+    if(bufin[0] == '\0') break;
     write_received_message(bufin);
   }
 
@@ -141,7 +141,7 @@ char *read_message(void){
 
   while(*runner != '\0')
     *(string_runner++) = *(runner++);
-  *(--string_runner) = '\0';
+  *(string_runner) = '\0';
 
   fprintf(stderr, "Success: \"%s\" copied.\n", string);
   turn_write_on();
@@ -151,9 +151,9 @@ char *read_message(void){
 void write_received_message(char *msg){
   fprintf(stderr, "Coping connection buffer to sock.rec_message.\n");
   strcpy(sock.rec_message + 1, msg);
-  fprintf(stderr, "Copied as: \"%s\"", sock.rec_message);
+  fprintf(stderr, "Copied as: \"%s\"\n", sock.rec_message);
   turn_read_on();
-  fprintf(stderr, "Readable as: \"%s\"", sock.rec_message);
+  fprintf(stderr, "Readable as: \"%s\"\n", sock.rec_message);
 }
 
 char *try_to_receive_message(void){
