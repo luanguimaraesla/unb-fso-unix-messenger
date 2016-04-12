@@ -8,7 +8,7 @@ OBJ_COMMON_FOLDER := ./obj/common/
 OBJ_SERVER_FOLDER := ./obj/server/
 OBJ_CLIENT_FOLDER := ./obj/client/
 COMPILER := gcc
-FLAGS := -I$(INCFOLDER)
+FLAGS := -w -I$(INCFOLDER)
 CFLAGS := -pthread
 
 SRC_COMMON_FILES := $(wildcard source/common/*.c)
@@ -45,6 +45,13 @@ run_server:
 
 run_client:
 	$(BINFOLDER)messenger_client 2> $(LOGFOLDER)messenger_client.log
+
+run:
+	$(shell tmux new-session -d && tmux split-window -d -t 0 -h)
+	$(shell tmux send-keys -t 0 '$(BINFOLDER)messenger_server 2> $(LOGFOLDER)messenger_server.log' enter)
+	$(shell tmux send-keys -t 1 'sleep 1' enter)
+	$(shell tmux send-keys -t 1 '$(BINFOLDER)messenger_client 2> $(LOGFOLDER)messenger_client.log' enter)
+	$(shell tmux attach)
 
 kill: PROCESS = $(shell ps aux | grep messenger | head -n 1 | grep -o -P "\d*" | head -n 1)
 kill:
