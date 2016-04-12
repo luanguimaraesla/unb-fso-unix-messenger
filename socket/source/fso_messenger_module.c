@@ -57,9 +57,13 @@ void init_messenger_header(void){
 
 void init_messenger_tr(void){
   msg_mod->role = tr;
+  char ip[] = "127.0.0.1";
+  int port = 5000;
 
   signal(SIGNAL_MESSAGE_TO_TRANSMIT, get_message);
   signal(SIGNAL_TO_FINISH, ready_to_finish);
+  
+  init_socket(ip, port);  
 
   // Infinite loop that verify if there is a new message
   while(!(msg_mod->ready_to_finish)){
@@ -75,8 +79,6 @@ void init_messenger_tr(void){
 
 void init_messenger_module(void){
   init_signals();
-  char ip[] = "127.0.0.1";
-  int port = 5000;
 
   // Creating the messenger controller struct
   msg_mod = messenger_module_create();
@@ -85,12 +87,10 @@ void init_messenger_module(void){
   // Creating the message queue
   int permission = 0666;
   create_message_queue(permission);
-  init_socket(ip, port);  
 
   // Child status
   int header_status = 0;
   int tr_status = 0;
-
   if((msg_mod->pid_header = fork()) < 0){
     fprintf(stderr, "%sError: module could not create a new header process\n.", KRED);
     exit(1);

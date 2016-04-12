@@ -94,27 +94,30 @@ void * listen_client(void * connection){
   while(1){
     memset(&bufin, 0x0, sizeof(bufin));
     fprintf(stderr, "Success: thread waiting to write on sock.rec_message.\n");
-    while(!is_available_to_write());
+    while(!is_available_to_write()){
+      sleep(1);
+    };
     fprintf(stderr, "Success: thread enabled to write on sock.rec_message.\n");
     if(recvfrom((int) connection, &bufin, sizeof(bufin), 0, NULL, NULL) < 0){
       fprintf(stderr, "Error: thread could not receive any data.\n");
       kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
     }else{
-      strtok(bufin, "\n"); // Remove the final "\n"
       fprintf(stderr, "Success: thread received \"%s\".\n", bufin);
     }
-    if(bufin[0] == '0' && bufin[1] == '\0') break;
-    write_received_message(&bufin[0]);
+    strtok(bufin, "\n");
+    if(bufin[0] == '0' && bufin[2] == '\0') break;
+    write_received_message(bufin);
   }
 
-  close(connection);
+  close_socket();
   fprintf(stderr, "Success: client disconnected.\n");
+  kill(msg_mod->pid_father, SIGNAL_TO_FINISH);
   pthread_exit(0);
 }
 
 void close_socket(void){
-  close(sock.id);
   close(sock.cli_id);
+  close(sock.id);
 }
 
 void init_socket(char ip_address[], int port){
@@ -134,9 +137,11 @@ char *read_message(void){
   }
   char *string = (char *) malloc (sizeof(char) * MSG_SIZE);
   char *runner = sock.rec_message + 1;
+  char *string_runner = string;
+
   while(*runner != '\0')
-    *(string++) = *(runner++);
-  *string = '\0';
+    *(string_runner++) = *(runner++);
+  *(--string_runner) = '\0';
 
   fprintf(stderr, "Success: \"%s\" copied.\n", string);
   turn_write_on();
@@ -145,14 +150,19 @@ char *read_message(void){
 
 void write_received_message(char *msg){
   fprintf(stderr, "Coping connection buffer to sock.rec_message.\n");
-  strcpy(sock.rec_message, msg);
+  strcpy(sock.rec_message + 1, msg);
+  fprintf(stderr, "Copied as: \"%s\"", sock.rec_message);
   turn_read_on();
+  fprintf(stderr, "Readable as: \"%s\"", sock.rec_message);
 }
 
 char *try_to_receive_message(void){
   fprintf(stderr, "Waiting sock.rec_message be readable.\n");
   while(!is_available_to_read() && !(msg_mod->ready_to_finish)) sleep(1);
-  return read_message();
+  if(msg_mod->ready_to_finish)
+    exit(0);
+  else
+    return read_message();
 } 
 
 char *try_to_transmit_message(char *msg){
@@ -171,7 +181,7 @@ void turn_write_on(void){
 
 void turn_read_on(void){
   fprintf(stderr, "The sock.rec_message string is readable.\n");
-  sock.rec_message[0]  = AVAILABLE_TO_READ;
+  sock.rec_message[0] = AVAILABLE_TO_READ;
 }
 
 int is_available_to_write(void){

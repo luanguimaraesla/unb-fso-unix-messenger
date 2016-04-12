@@ -67,6 +67,5 @@ void force_end(int signal){
   kill(msg_mod->pid_tr, 9);
   kill(msg_mod->pid_header, 9);
   delete_message_queue();
-  close_socket();
   exit(0); 
 }
