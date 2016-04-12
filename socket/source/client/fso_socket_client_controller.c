@@ -1,4 +1,4 @@
-#include "fso_socket_controller.h"
+#include "fso_socket_client_controller.h"
 #include "fso_queue_messenger.h"
 #include "fso_messenger_module_signals.h"
 #include <sys/ipc.h>
@@ -37,95 +37,73 @@ void create_socket(void){
   }
 }
 
-void bind_socket(char ip_address[], int port){
+void connect_to_socket(char ip_address[], int port){
   // Clean the serv_addr variable
   memset((char *)&(sock.serv_addr),0,sizeof(sock.serv_addr));
   sock.serv_addr.sin_family       = sock.sin_family;
   sock.serv_addr.sin_addr.s_addr  = inet_addr(ip_address);
   sock.serv_addr.sin_port         = htons(port);
 
-  if (bind(sock.id, (struct sockaddr *)&(sock.serv_addr), sizeof(sock.serv_addr)) < 0) {
-    fprintf(stderr, "Error binding socket.\n");
+  if (connect(sock.id, (struct sockaddr *)&(sock.serv_addr), sizeof(sock.serv_addr)) < 0) {
+    fprintf(stderr, "Error connecting socket.\n");
     kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
   }else{
-    fprintf(stderr, "Success: binding socket.\n");
+    fprintf(stderr, "Success: connecting socket.\n");
   }
 }
 
-void listen_port(void){
-  if(listen(sock.id, 5) < 0){
-    fprintf(stderr, "Error listening port.\n");
-    kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
-  }else{
-    fprintf(stderr, "Success: listening port.\n");
-  }
-}
-
-void listen_new_client(void){
+void open_conversation(void){
   int addr_length = sizeof(sock.cli_addr);
-  int pid;
-  int cli_counter = 0;
   int new_connection;
 
   turn_write_on();
-  if((sock.cli_id = accept(sock.id, (struct sockaddr *) &(sock.cli_addr), &addr_length)) < 0){
-    fprintf(stderr, "Error listening client.\n");
-    kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
-  }else{
-    fprintf(stderr, "Success: listening client.\n");
-    new_connection = sock.cli_id;
-  }
-
-  if((pthread_create(&client_thread,
-                     NULL, listen_client,
-                     (void *) new_connection)) < 0){
+  if((pthread_create(&server_thread,
+                     NULL, init_conversation,
+                     (void *) sock.id)) < 0){
     fprintf(stderr, "Error creating thread in fuction listen_client.\n");
     kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
   }else{
     fprintf(stderr, "Success: listening thread created.\n");
   }
-  //pthread_join(client_thread);
 }
 
-void * listen_client(void * connection){
+void * init_conversation(void * connection){
   char bufin[MSG_SIZE];
 
   fprintf(stderr, "Success: client connected.\n");
   while(1){
-    memset(&bufin, 0x0, sizeof(bufin));
+    memset(bufin, 0x0, sizeof(bufin));
     fprintf(stderr, "Success: thread waiting to write on sock.rec_message.\n");
     while(!is_available_to_write()){
       sleep(1);
     };
     fprintf(stderr, "Success: thread enabled to write on sock.rec_message.\n");
-    if(recvfrom((int) connection, &bufin, sizeof(bufin), 0, NULL, NULL) < 0){
+    if(recvfrom((int) connection, bufin, sizeof(bufin), 0, NULL, NULL) < 0){
       fprintf(stderr, "Error: thread could not receive any data.\n");
       kill(getpid(), SIGNAL_TO_KILL_EVERYTHING);
     }else{
       fprintf(stderr, "Success: thread received \"%s\".\n", bufin);
     }
     strtok(bufin, "\n");
-    if(bufin[0] == '0' && bufin[2] == '\0') break;
+    if(bufin[0] == '0' && bufin[1] == '\0') break;
     write_received_message(bufin);
   }
 
   close_socket();
   fprintf(stderr, "Success: client disconnected.\n");
   kill(msg_mod->pid_father, SIGNAL_TO_FINISH);
-  pthread_exit(0);
+  pthread_exit(NULL);
 }
 
 void close_socket(void){
-  close(sock.cli_id);
   close(sock.id);
 }
 
 void init_socket(char ip_address[], int port){
   create_socket_control();
   create_socket();
-  bind_socket(ip_address, port);
-  listen_port();
-  listen_new_client();
+  connect_to_socket(ip_address, port);
+  open_conversation();
 }
 
 char *read_message(void){
@@ -141,7 +119,7 @@ char *read_message(void){
 
   while(*runner != '\0')
     *(string_runner++) = *(runner++);
-  *(--string_runner) = '\0';
+  *(string_runner) = '\0';
 
   fprintf(stderr, "Success: \"%s\" copied.\n", string);
   turn_write_on();
@@ -166,8 +144,8 @@ char *try_to_receive_message(void){
 } 
 
 char *try_to_transmit_message(char *msg){
-  int len = sizeof(sock.cli_addr);
-  if(sendto(sock.cli_id, msg, MSG_SIZE, 0, (struct sockaddr *) &(sock.cli_addr), len) < 0){
+  int len = sizeof(sock.serv_addr);
+  if(sendto(sock.id, msg, MSG_SIZE, 0, (struct sockaddr *) &(sock.serv_addr), len) < 0){
     fprintf(stderr, "Error transmitting message\n");
   }else{
     fprintf(stderr, "Success transmitting message: \"%s\"\n", msg);

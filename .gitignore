@@ -1,4 +1,4 @@
-*/log/messenger.log
+*/log/messenger*.log
 *.sw*
 *prog
 */learning/msg_queue.c
