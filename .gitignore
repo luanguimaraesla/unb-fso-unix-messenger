@@ -1,3 +1,5 @@
+*.odt
+*.odt#
 */log/messenger*.log
 *.sw*
 *prog
