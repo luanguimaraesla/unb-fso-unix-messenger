@@ -15,7 +15,10 @@ SRC_COMMON_FILES := $(wildcard source/common/*.c)
 SRC_SERVER_FILES := $(wildcard source/server/*.c)
 SRC_CLIENT_FILES := $(wildcard source/client/*.c)
 
-all: client server
+all: setup client server
+
+setup:
+	mkdir -p $(BINFOLDER)
 
 common: $(SRC_COMMON_FILES:source/common/%.c=obj/common/%.o)
 
