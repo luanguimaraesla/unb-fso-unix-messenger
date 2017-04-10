@@ -20,6 +20,16 @@ all: setup client server
 setup:
 	mkdir -p $(BINFOLDER)
 
+install:
+	mkdir -p /var/log/unix-messenger/
+	cp $(BINFOLDER)messenger_{client,server} /usr/bin/
+	cp unix-messenger.sh /usr/bin/unix-messenger
+	sed -i -e "s_LOGFOLDER=.*_LOGFOLDER=/var/log/unix-messenger_g" /usr/bin/unix-messenger
+	sed -i -e "s_BINFOLDER=.*_BINFOLDER=/usr/bin_g" /usr/bin/unix-messenger
+
+	
+	
+
 common: $(SRC_COMMON_FILES:source/common/%.c=obj/common/%.o)
 
 client: common $(SRC_CLIENT_FILES:source/client/%.c=obj/client/%.o)
