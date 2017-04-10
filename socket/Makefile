@@ -21,14 +21,14 @@ setup:
 	mkdir -p $(BINFOLDER)
 
 install:
-	mkdir -p /var/log/unix-messenger/
-	cp $(BINFOLDER)messenger_{client,server} /usr/bin/
-	cp unix-messenger.sh /usr/bin/unix-messenger
-	sed -i -e "s_LOGFOLDER=.*_LOGFOLDER=/var/log/unix-messenger_g" /usr/bin/unix-messenger
-	sed -i -e "s_BINFOLDER=.*_BINFOLDER=/usr/bin_g" /usr/bin/unix-messenger
-
-	
-	
+	mkdir -p ${RPMROOT}/var/log/unix-messenger/
+	mkdir -p ${RPMROOT}/usr/bin/
+	cp $(BINFOLDER)messenger_{client,server} ${RPMROOT}/usr/bin/
+	cp unix-messenger.sh unix-messenger.sh.tmp
+	sed -i -e "s:LOGFOLDER=.*:LOGFOLDER=/var/log/unix-messenger:g" unix-messenger.sh.tmp
+	sed -i -e "s:BINFOLDER=.*:BINFOLDER=/usr/bin:g" unix-messenger.sh.tmp
+	cp unix-messenger.sh.tmp ${RPMROOT}/usr/bin/unix-messenger
+	rm -rf unix-messenger.sh.tmp
 
 common: $(SRC_COMMON_FILES:source/common/%.c=obj/common/%.o)
 
